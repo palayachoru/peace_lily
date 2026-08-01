@@ -1,5 +1,3 @@
 message("-- Processing: ${CMAKE_CURRENT_LIST_FILE}")
 
-add_subdirectory(common)
-
-add_subdirectory(list)
+target_sources(plily PRIVATE common.c)
