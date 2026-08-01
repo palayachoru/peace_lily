@@ -1,0 +1,7 @@
+# ignore folders
+dist/
+build/
+
+
+# build related files
+.cache
