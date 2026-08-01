@@ -1,7 +1,6 @@
 #define _POSIX_C_SOURCE 200809L   // Enables declarations for POSIX functions and symbols
 
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 
 #include <plily/common.h>
@@ -10,7 +9,24 @@
 
 
 
-static bool update_value(Value *value, VType vtype, void *data) {
+Value* pl_new_value(VType vtype, void *data) {
+  if (!data) return NULL;
+
+  // allocate memory for Element
+  Value *value = calloc(1, sizeof(Value));
+  if (!value) return NULL;
+
+  // update Element with value
+  if (!pl_update_value(value, vtype, data)) {
+    pl_free_value(value);
+    return NULL;
+  }
+
+  return value;
+}
+
+
+bool pl_update_value(Value *value, VType vtype, void *data) {
   if (!value || !data) return false;
 
   switch (vtype) {
@@ -30,24 +46,7 @@ static bool update_value(Value *value, VType vtype, void *data) {
 }
 
 
-Value* pl_new_element(VType vtype, void *data) {
-  if (!data) return NULL;
-
-  // allocate memory for Element
-  Value *value = calloc(1, sizeof(Value));
-  if (!value) return NULL;
-
-  // update Element with value
-  if (!update_value(value, vtype, data)) {
-    pl_free_value(value);
-    return NULL;
-  }
-
-  return value;
-}
-
-
-void pl_free_element(Value *value) {
+void pl_free_value(Value *value) {
   if (!value) return;
 
   // free the memory allocated for string data
@@ -65,7 +64,7 @@ Node* pl_new_node(VType vtype, void *data) {
   if (!node) return NULL;
 
   // update the members with default values
-  if (!update_value(&node->value, vtype, data)) {
+  if (!pl_update_value(&node->value, vtype, data)) {
     pl_free_node(node);
     return NULL;
   }

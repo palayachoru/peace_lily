@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 
 // =======
 // MACROS
@@ -49,11 +50,13 @@ typedef struct PL_Node {
 // ========================
 // Function Declarations
 // ========================
-PL_Value* pl_new_value(PL_VType etype, void *data);
+PL_Value* pl_new_value(PL_VType vtype, void *data);
+
+bool pl_update_value(PL_Value *value, PL_VType vtype, void *data);
 
 void pl_free_value(PL_Value *v);
 
 
-PL_Node* pl_new_node(PL_VType etype, void *data);
+PL_Node* pl_new_node(PL_VType vtype, void *data);
 
 void pl_free_node(PL_Node *node);
