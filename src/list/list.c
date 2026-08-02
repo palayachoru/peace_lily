@@ -91,7 +91,7 @@ void pl_list_free(List **self) {
       if (arr[i].vtype == PL_STR) free(arr[i].as.sval);
   }
 
-  free(arr);    // free the array of Value structs
+  free(arr);               // free the array of Value structs
   free( (*self) );         // free the List struct
 
   *self = NULL;            // to avoid dangling pointer, set it to null
@@ -308,8 +308,8 @@ static bool resize(List *self) {
   Value *new_arr = realloc(self->arr, new_capacity * sizeof(Value));
   if (!new_arr) return false;
 
-  // FIX: Clear the newly added memory block so it is not filled with heap garbage
-    memset(&new_arr[old_capacity], 0, (new_capacity - old_capacity) * sizeof(Value));
+  //Clear the newly added memory block so it is not filled with heap garbage
+  memset(&new_arr[old_capacity], 0, (new_capacity - old_capacity) * sizeof(Value));
 
   // upon success, update the members
   self->arr = new_arr;

@@ -18,6 +18,7 @@
 #define MIN_ARRAY_CAPACITY  4
 
 
+
 /// Representation of List (Dynamic Array) struct
 typedef struct PL_List {
   /// Get the value at the given index
