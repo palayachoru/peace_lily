@@ -8,12 +8,13 @@
 
 // do..while block is used not to provide looping but, it's
 // a trick used to consider all the statments in one block
-#define PL_SWAP(a, b)           \
-  do {                          \
-    __typeof__(a) _tmp = (a);   \
-    (a) = (b);                  \
-    (b) = _tmp;                 \
-  } while (0)
+#define PL_SWAP(a, b) \
+    do { \
+        char swap_tmp[sizeof(a)]; \
+        memcpy(swap_tmp, &(a), sizeof(a)); \
+        memcpy(&(a), &(b), sizeof(a)); \
+        memcpy(&(b), swap_tmp, sizeof(a)); \
+    } while (0)
 
 
 
@@ -54,7 +55,7 @@ PL_Value* pl_new_value(PL_VType vtype, void *data);
 
 bool pl_update_value(PL_Value *value, PL_VType vtype, void *data);
 
-void pl_free_value(PL_Value *v);
+void pl_free_value(PL_Value *v);  // use this for manual memory allocated PL_Value
 
 
 PL_Node* pl_new_node(PL_VType vtype, void *data);

@@ -1,7 +1,7 @@
 message("-- Processing: ${CMAKE_CURRENT_LIST_FILE}")
 
 # Gather all the source test files
-file(GLOB PLITY_TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+file(GLOB PLILY_TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 
 if(NOT PLILY_TEST_SOURCES)
   message(WARNING "No tests found under ${CMAKE_CURRENT_SOURCE_DIR}")

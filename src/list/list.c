@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L   // Enables declarations for POSIX functions and symbols
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -7,7 +9,6 @@
 #include <plily/list.h>
 
 #include "internal.h"
-#include "plily/common.h"
 
 
 
@@ -22,9 +23,9 @@ static bool append(List *self, VType vtype, void *data);
 
 static bool insert(List *self, int index, VType vtype, void *data);
 
-static bool replace(List *self, int index, VType vtype, void *data);
+static bool replace(List *self, int idx, VType vtype, void *data);
 
-static Value* pop(List *self);
+static Value pop(List *self);
 
 static bool pl_remove(List *self, VType vtype, void *data);
 
@@ -81,13 +82,16 @@ List* pl_list_init(void) {
 void pl_list_free(List **self) {
   if (!self || !(*self)) return;
 
+  Value *arr = (*self)->arr;
+
   // arr member check for not NULL and free each Value from the list
-  if ( (*self)->arr ) {
+  if (arr) {
     for (size_t i = 0; i < (*self)->size; i++)
-      pl_free_value( &(*self)->arr[i] );
+      // Free the string data
+      if (arr[i].vtype == PL_STR) free(arr[i].as.sval);
   }
 
-  free( (*self)->arr );    // free the array of Value structs
+  free(arr);    // free the array of Value structs
   free( (*self) );         // free the List struct
 
   *self = NULL;            // to avoid dangling pointer, set it to null
@@ -151,6 +155,108 @@ static bool append(List *self, VType vtype, void *data) {
 }
 
 
+static bool insert(List *self, int index, VType vtype, void *data) {
+  if (!self || !data || index < 0 || (size_t)index > self->size) return false;
+
+  // insertion at last (index == size)
+  if ((size_t)index == self->size)
+    return append(self, vtype, data);
+
+  // check if the array size reached the capacity
+  if ( is_resize_limit_hit(self) && !resize(self) ) return false;
+
+  // move the elements one step right
+  for (size_t i = self->size; i > (size_t)index; i--) {
+    self->arr[i] = self->arr[i - 1];    // struct copy, just like normal values
+  }
+
+  // after the place is vacant, update the new value
+  if ( !pl_update_value(&self->arr[index], vtype, data) ) return false;
+
+  // finally incremnt the size
+  self->size++;
+  return true;
+}
+
+
+static bool replace(List *self, int idx, VType vtype, void *data) {
+  if (!self || idx < 0 || (size_t)idx >= self->size || !data) return false;
+
+  if ( !(vtype == PL_INT || vtype == PL_DOUBLE || vtype == PL_STR) ) return false;
+
+  // if new value is string, then let's make a copy
+  char *new_str = NULL;
+  if (vtype == PL_STR) {
+    new_str = strdup((char *)data);
+    if (!new_str) return false;
+  }
+
+  // if existing value has string data then let's free it first
+  if (self->arr[idx].vtype == PL_STR) free(self->arr[idx].as.sval);
+
+  switch (vtype) {
+    case PL_INT: self->arr[idx].as.ival = *(int *)data; break;
+    case PL_DOUBLE: self->arr[idx].as.dval = *(double *)data; break;
+    case PL_STR: self->arr[idx].as.sval = new_str; break;
+  }
+
+  self->arr[idx].vtype = vtype;    // update the value type
+  return true;
+}
+
+
+static Value pop(List *self) {
+  if (!self || self->is_empty(self)) return (Value){0};
+
+  // copy of value to be popped
+  Value to_pop = self->arr[self->size - 1];
+
+  // clear the data at the removed slot
+  memset(&self->arr[self->size - 1], 0, sizeof(Value));
+
+  self->size--;
+
+  // check if we need to shrink the array
+  if (is_shrink_limit_hit(self)) shrink(self);
+
+  // if Value contain string data, caller has to free it
+  return to_pop;
+}
+
+
+static bool remove_at(List *self, int index) {
+  if (!self || index < 0 || (size_t)index >= self->size) return false;
+
+  // free the value at the removel index
+  pl_free_value(&self->arr[index]);
+
+  self->size--;
+
+  // Shift left: move arr[i+1] into arr[i]
+  for (size_t i = (size_t)index; i < self->size; i++) {
+    self->arr[i] = self->arr[i + 1];
+  }
+
+  self->arr[self->size] = (Value){0};
+
+  // check if we need to shrink the array
+  if (is_shrink_limit_hit(self)) shrink(self);
+
+  return true;
+}
+
+
+static bool pl_remove(List *self, VType vtype, void *data) {
+  if (!self || !data || self->is_empty(self)) return false;
+
+  // identify the index of first occurance of the value
+  int index = pl_index(self, vtype, data);
+  if (index < 0) return false;
+
+  return remove_at(self, index);
+}
+
+
 static void reverse(List *self) {
   if (!self || self->size <= 1) return;
 
@@ -178,7 +284,7 @@ static bool is_resize_limit_hit(List *self) {
   if (!self) return false;
 
   // check if the no of Values reached 100% of capacity
-  return (self->size == self->capacity);
+  return (self->size >= self->capacity);
 }
 
 
@@ -194,12 +300,16 @@ static bool is_shrink_limit_hit(List *self) {
 
 
 static bool resize(List *self) {
-  if (!self || !is_resize_limit_hit(self)) return false;
+  if (!self) return false;
 
+  size_t old_capacity = self->capacity;
   size_t new_capacity = self->capacity * 2;
 
   Value *new_arr = realloc(self->arr, new_capacity * sizeof(Value));
   if (!new_arr) return false;
+
+  // FIX: Clear the newly added memory block so it is not filled with heap garbage
+    memset(&new_arr[old_capacity], 0, (new_capacity - old_capacity) * sizeof(Value));
 
   // upon success, update the members
   self->arr = new_arr;
@@ -209,7 +319,7 @@ static bool resize(List *self) {
 
 
 static bool shrink(List *self) {
-  if (!self || !is_shrink_limit_hit(self)) return false;
+  if (!self) return false;
 
   size_t new_capacity = self->capacity / 2;
   if (new_capacity < MIN_ARRAY_CAPACITY) new_capacity = MIN_ARRAY_CAPACITY;

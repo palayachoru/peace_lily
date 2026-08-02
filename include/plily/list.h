@@ -36,7 +36,7 @@ typedef struct PL_List {
   bool (* replace)(struct PL_List *self, int index, PL_VType vtype, void *data);
 
   /// Pop the last value from the list
-  PL_Value* (* pop)(struct PL_List *self);
+  PL_Value (* pop)(struct PL_List *self);
 
   /// Remove the first occurrence of the value
   bool (* remove)(struct PL_List *self, PL_VType vtype, void *data);
