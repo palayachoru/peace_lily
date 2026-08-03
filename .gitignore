@@ -1,7 +1,7 @@
 # ignore folders
 dist/
 build/
-
+build_asan/
 
 # build related files
 .cache

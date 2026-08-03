@@ -20,12 +20,19 @@ endif()
 # Declare the target library (source files will be added later)
 add_library(plily STATIC)
 
-
 # Locate the header files
 target_include_directories(plily
   PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src         # for internal headers
 )
+
+
+# Specify the ASan (AddressSanitizer) option
+option(PL_ASAN "Enable Address/Undefined sanitizers" OFF)
+if (PL_ASAN AND NOT MSVC)
+  add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer -g)
+  add_link_options(-fsanitize=address,undefined)
+endif()
 
 
 # Specify the compiler flags
@@ -58,3 +65,13 @@ add_subdirectory(src)
 
 enable_testing()
 add_subdirectory(tests)
+
+
+
+# NOTES: To run with ASan options
+# cmake -B build_asan -DPL_ASAN=ON -DCMAKE_BUILD_TYPE=Debug  # generate build files
+# cmake --build build_asan                                   # compile
+# ctest --test-dir build_asan --output-on-failure            # run test with ASan
+
+# Need symbolizer to map -> hex offset to source code file line number
+# sudo dnf install llvm-symbolizer

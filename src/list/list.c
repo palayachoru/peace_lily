@@ -1,3 +1,4 @@
+#include "plily/common.h"
 #define _POSIX_C_SOURCE 200809L   // Enables declarations for POSIX functions and symbols
 
 #include <stdbool.h>
@@ -227,8 +228,9 @@ static Value pop(List *self) {
 static bool remove_at(List *self, int index) {
   if (!self || index < 0 || (size_t)index >= self->size) return false;
 
-  // free the value at the removel index
-  pl_free_value(&self->arr[index]);
+  // Null the assigned values at the removed slot
+  if (self->arr[index].vtype == PL_STR) free(self->arr[index].as.sval);
+  self->arr[index] = (Value){0};
 
   self->size--;
 
