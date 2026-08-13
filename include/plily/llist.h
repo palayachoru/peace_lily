@@ -12,28 +12,33 @@
 
 
 
+/// Forward declaration: Struct to represent the state of the LinkedList
+/// This struct is opaque to the consumers to prevent modifying the states
+typedef struct _LinkedListState _LinkedListState;
+
+
 /// Representation of Single Linked List
 typedef struct PL_LinkedList {
   /// Get the value at the given index
-  PL_Value (* get)(struct PL_LinkedList *self, int index);
+  PL_Value (* get)(const struct PL_LinkedList *self, int index);
 
   /// Get the index of the first occurrence of the value
-  int (* index)(struct PL_LinkedList *self, PL_VType vtype, void *data);
+  int (* index)(const struct PL_LinkedList *self, const PL_VType vtype, const void *data);
 
   /// Append the value at the end of the list
-  bool (* append)(struct PL_LinkedList *self, PL_VType vtype, void *data);
+  bool (* append)(struct PL_LinkedList *self, const PL_VType vtype, const void *data);
 
   /// Insert the value at the given index
-  bool (* insert)(struct PL_LinkedList *self, int index, PL_VType vtype, void *data);
+  bool (* insert)(struct PL_LinkedList *self, int index, const PL_VType vtype, const void *data);
 
   /// Replace the value at the given index
-  bool (* replace)(struct PL_LinkedList *self, int index, PL_VType vtype, void *data);
+  bool (* replace)(struct PL_LinkedList *self, int index, const PL_VType vtype, const void *data);
 
   /// Pop the last value from the list
   PL_Value (* pop)(struct PL_LinkedList *self);
 
   /// Remove the first occurrence of the value
-  bool (* remove)(struct PL_LinkedList *self, PL_VType vtype, void *data);
+  bool (* remove)(struct PL_LinkedList *self, const PL_VType vtype, const void *data);
 
   /// Remove the value at the given index
   bool (* remove_at)(struct PL_LinkedList *self, int index);
@@ -42,14 +47,12 @@ typedef struct PL_LinkedList {
   void (* reverse)(struct PL_LinkedList *self);
 
   /// Get the size of the list
-  size_t (* length)(struct PL_LinkedList *self);
+  size_t (* length)(const struct PL_LinkedList *self);
 
   /// Check if the list is empty
-  bool (* is_empty)(struct PL_LinkedList *self);
+  bool (* is_empty)(const struct PL_LinkedList *self);
 
-  PL_Node *head;   ///< Reference to head node of linked list
-  PL_Node *tail;   ///< Reference to tail node of linked list
-  size_t size;     ///< No of nodes in linked list
+  _LinkedListState *_state;   ///< Internal struct to hold state of the Linkedlist
 } PL_LinkedList;
 
 

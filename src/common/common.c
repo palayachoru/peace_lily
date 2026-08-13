@@ -7,9 +7,23 @@
 
 #include "internal.h"
 
+void pl_free_value_data(PL_Value value) {
+  if (value.vtype != PL_STR) return;
+
+  // free the memory allocated for string data
+  free(value.as.sval);
+}
 
 
-Value* pl_new_value(VType vtype, void *data) {
+void pl_free_value(Value *value) {
+  if (!value || value->vtype != PL_STR) return;
+
+  // free the memory allocated for string data
+  free(value->as.sval);
+  free(value);
+}
+
+Value* pl_new_value(const VType vtype, const void *data) {
   if (!data) return NULL;
 
   // allocate memory for Element
@@ -26,7 +40,7 @@ Value* pl_new_value(VType vtype, void *data) {
 }
 
 
-bool pl_update_value(Value *value, VType vtype, void *data) {
+bool pl_update_value(Value *value, const VType vtype, const void *data) {
   if (!value || !data) return false;
 
   switch (vtype) {
@@ -46,17 +60,10 @@ bool pl_update_value(Value *value, VType vtype, void *data) {
 }
 
 
-void pl_free_value(Value *value) {
-  if (!value) return;
-
-  // free the memory allocated for string data
-  if (value->vtype == PL_STR) free(value->as.sval);
-
-  free(value);
-}
 
 
-Node* pl_new_node(VType vtype, void *data) {
+
+Node* pl_new_node(const VType vtype, const void *data) {
   if (!data) return NULL;
 
   // allocate memory for Node

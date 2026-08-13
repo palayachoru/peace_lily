@@ -51,13 +51,15 @@ typedef struct PL_Node {
 // ========================
 // Function Declarations
 // ========================
-PL_Value* pl_new_value(PL_VType vtype, void *data);
+PL_Value* pl_new_value(const PL_VType vtype, const void *data);
 
-bool pl_update_value(PL_Value *value, PL_VType vtype, void *data);
+bool pl_update_value(PL_Value *value, const PL_VType vtype, const void *data);
 
-void pl_free_value(PL_Value *v);  // use this for manual memory allocated PL_Value
+void pl_free_value_data(PL_Value v);  // use this for stack allocated PL_Value
+
+void pl_free_value(PL_Value *v);      // use this for heap allocated PL_Value
 
 
-PL_Node* pl_new_node(PL_VType vtype, void *data);
+PL_Node* pl_new_node(const PL_VType vtype, const void *data);
 
 void pl_free_node(PL_Node *node);
