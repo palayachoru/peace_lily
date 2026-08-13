@@ -2,7 +2,7 @@
 
 /**
  * @file llist.h
- * @brief Single Linked List
+ * @brief Linked List
  */
 
 #include <stddef.h>
@@ -56,12 +56,51 @@ typedef struct PL_LinkedList {
 } PL_LinkedList;
 
 
+/// Representation of Doubly Linked List
+typedef struct PL_DLinkedList {
+  /// Get the value at the given index
+  PL_Value (* get)(const struct PL_DLinkedList *self, int index);
+
+  /// Get the index of the first occurrence of the value
+  int (* index)(const struct PL_DLinkedList *self, const PL_VType vtype, const void *data);
+
+  /// Append the value at the end of the list
+  bool (* append)(struct PL_DLinkedList *self, const PL_VType vtype, const void *data);
+
+  /// Insert the value at the given index
+  bool (* insert)(struct PL_DLinkedList *self, int index, const PL_VType vtype, const void *data);
+
+  /// Replace the value at the given index
+  bool (* replace)(struct PL_DLinkedList *self, int index, const PL_VType vtype, const void *data);
+
+  /// Pop the last value from the list
+  PL_Value (* pop)(struct PL_DLinkedList *self);
+
+  /// Remove the first occurrence of the value
+  bool (* remove)(struct PL_DLinkedList *self, const PL_VType vtype, const void *data);
+
+  /// Remove the value at the given index
+  bool (* remove_at)(struct PL_DLinkedList *self, int index);
+
+  /// Reverse the list
+  void (* reverse)(struct PL_DLinkedList *self);
+
+  /// Get the size of the list
+  size_t (* length)(const struct PL_DLinkedList *self);
+
+  /// Check if the list is empty
+  bool (* is_empty)(const struct PL_DLinkedList *self);
+
+  _LinkedListState *_state;   ///< Internal struct to hold state of the Linkedlist
+} PL_DLinkedList;
+
+
 
 // ========================
 // Function Declarations
 // ========================
 /**
- * @brief Allocate memory for PLLinkedList struct and initialize with values
+ * @brief Allocate memory for PL_LinkedList struct and initialize with values
  * @return PLLinkedList - reference to newly created LinkedList struct
  */
 PL_LinkedList* pl_linkedlist_init(void);
@@ -71,3 +110,16 @@ PL_LinkedList* pl_linkedlist_init(void);
  * @param **self - reference of reference to List
  */
 void pl_linkedlist_free(PL_LinkedList **self);
+
+
+/**
+ * @brief Allocate memory for PL_DLinkedList struct and initialize with values
+ * @return PL_DLinkedList - reference to newly created Doubly LinkedList struct
+ */
+PL_DLinkedList* pl_dlinkedlist_init(void);
+
+/**
+ * @brief Free the List along will all the element in it
+ * @param **self - reference of reference to List
+ */
+void pl_dlinkedlist_free(PL_DLinkedList **self);

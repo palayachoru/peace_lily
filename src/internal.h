@@ -12,3 +12,4 @@ typedef PL_Node  Node;
 
 typedef PL_List List;
 typedef PL_LinkedList LinkedList;
+typedef PL_DLinkedList DLinkedList;

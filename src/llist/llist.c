@@ -1,13 +1,13 @@
 #define _POSIX_C_SOURCE 200809L   // Enables declarations for POSIX functions and symbols
 
 #include <stdlib.h>
-#include <stddef.h>
 #include <string.h>
 
 #include <plily/llist.h>
 #include <plily/common.h>
 
 #include "internal.h"
+
 
 
 /// Representation of Struct that holds the state of the LinkedList
@@ -46,6 +46,7 @@ static inline bool is_empty(const LinkedList *self);
 
 // UTILITY FUNCTION
 static inline bool is_value_match(const Value value, const VType vtype, const void *data);
+
 
 
 // =====================
