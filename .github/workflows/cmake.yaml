@@ -1,0 +1,42 @@
+name: Peace Lily Test Suit
+
+# when the workflow has to be triggered
+on:
+  push:
+    branches: ["main"]
+
+# where to run & how to run the tests
+jobs:
+  build_and_test:
+    name: CMake Build-Compile-Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Pull the latest code
+      - name: Pull the code
+        uses: actions/checkout@v5
+
+      # Install CMake
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: 'latest'
+
+      # Install CUnit library & Ninja build system
+      - name: Install CUnit test library & Ninja
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcunit1-dev ninja-build
+
+      # Generate the build files
+      - name: Generate build files
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
+
+      # Compile
+      - name: Generate the executables
+        run: cmake --build ${{github.workspace}}/build --config Release
+
+      # Run the tests
+      - name: Run the tests
+        working-directory: ${{github.workspace}}/build
+        run: ctest --output-on-failure -C Release
