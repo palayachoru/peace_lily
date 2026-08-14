@@ -9,12 +9,11 @@
 // do..while block is used not to provide looping but, it's
 // a trick used to consider all the statments in one block
 #define PL_SWAP(a, b) \
-    do { \
-        char swap_tmp[sizeof(a)]; \
-        memcpy(swap_tmp, &(a), sizeof(a)); \
-        memcpy(&(a), &(b), sizeof(a)); \
-        memcpy(&(b), swap_tmp, sizeof(a)); \
-    } while (0)
+  do { \
+    __typeof__(a) _tmp = (a); \
+    (a) = (b);  \
+    (b) = _tmp; \
+  } while (0)
 
 
 

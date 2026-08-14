@@ -24,17 +24,17 @@ typedef struct _LinkedListState {
 // =====================
 static Value get(const DLinkedList *self, int index);
 
-static int pl_index(const DLinkedList *self, const VType vtype, const void *data);
+static int dll_index(const DLinkedList *self, const VType vtype, const void *data);
 
 static bool append(DLinkedList *self, const VType vtype, const void *data);
 
 static bool insert(DLinkedList *self, int index, const VType vtype, const void *data);
 
-static bool replace(DLinkedList *self, int idx, const VType vtype, const void *data);
+static bool replace(DLinkedList *self, int index, const VType vtype, const void *data);
 
 static Value pop(DLinkedList *self);
 
-static bool pl_remove(DLinkedList *self, const VType vtype, const void *data);
+static bool dll_remove(DLinkedList *self, const VType vtype, const void *data);
 
 static bool remove_at(DLinkedList *self, int index);
 
@@ -46,6 +46,8 @@ static inline bool is_empty(const DLinkedList *self);
 
 // UTILITY FUNCTION
 static inline bool is_value_match(const Value value, const VType vtype, const void *data);
+
+static Node* node_at(const DLinkedList *self, int index);
 
 
 
@@ -70,12 +72,12 @@ DLinkedList* pl_dlinkedlist_init(void) {
 
   // Initialize the function pointers
   dll->get = get;
-  dll->index = pl_index;
+  dll->index = dll_index;
   dll->append = append;
   dll->insert = insert;
   dll->replace = replace;
   dll->pop = pop;
-  dll->remove = pl_remove;
+  dll->remove = dll_remove;
   dll->remove_at = remove_at;
   dll->reverse = reverse;
   dll->length = length;
@@ -110,30 +112,15 @@ void pl_dlinkedlist_free(PL_DLinkedList **self) {
 // Core Functions Implementation
 // ============================================
 static Value get(const DLinkedList *self, int index) {
-  if (!self || self->is_empty(self) || index < 0 || (size_t)index >= self->length(self))
-    return (Value){0};
+  Node *n = node_at(self, index);
 
-  Node *curr = NULL;
-  size_t length = self->length(self);
-
-  // if index is in first half, then use head node to reach the node
-  // and if index is in second half, use tail node to reach the node
-
-  if ((size_t)index <= length / 2) {
-    curr = self->_state->head;
-    for (size_t i = 0; i < (size_t)index; i++) curr = curr->next;
-  }
-  else {
-    curr = self->_state->tail;
-    size_t steps = (length - 1) - (size_t)index;
-    for (size_t i = 0; i < steps; i++) curr = curr->prev;
-  }
-
-  return curr->value;
+  // The Value is borrowed not ownership transfer, so caller should not
+  // free or modify the value.
+  return n ? n->value : (Value){0};
 }
 
 
-static int pl_index(const DLinkedList *self, VType vtype, const void *data) {
+static int dll_index(const DLinkedList *self, VType vtype, const void *data) {
   if (!self || !data || self->is_empty(self)) return -1;
 
   Node *curr = self->_state->head;
@@ -174,6 +161,81 @@ static bool append(DLinkedList *self, VType vtype, const void *data) {
 }
 
 
+static bool insert(DLinkedList *self, int index, const VType vtype, const void *data) {
+  if (!self || index < 0 || (size_t)index > self->length(self) || !data) return false;
+
+  // 1. insert position at the end
+  if (self->length(self) == (size_t)index)
+    return append(self, vtype, data);
+
+  // create a node and update it with value
+  Node *n = pl_new_node(vtype, data);
+  if (!n) return false;
+
+  if (index == 0) {
+    // 2. insert at the head position
+    Node *old_head = self->_state->head;
+
+    n->prev = NULL;
+    n->next = old_head;
+
+    old_head->prev  = n;
+    self->_state->head = n;
+  }
+  else {
+    // 3. insert in-b/w positions
+    Node *curr = node_at(self, index);
+    if (!curr) {
+      pl_free_node(n);
+      return false;
+    }
+
+    // update node's references
+    n->next = curr;
+    n->prev = curr->prev;
+
+    curr->prev->next = n;
+    curr->prev = n;
+  }
+
+  self->_state->size++;
+  return true;
+}
+
+
+static bool replace(DLinkedList *self, int index, const VType vtype, const void *data) {
+  if (!self || self->is_empty(self) || index < 0 || (size_t)index >= self->length(self) || !data)
+    return false;
+
+  // check for valid data types
+  if (vtype != PL_INT && vtype != PL_DOUBLE && vtype != PL_STR) return false;
+
+  // get the node at the index
+  Node *n = node_at(self, index);
+  if (!n) return false;
+
+  char *new_str = NULL;
+  // if new value is a string, then, let's make a copy of the data
+  if (vtype == PL_STR) {
+    new_str = strdup( (char *)data );
+    if (!new_str) return false;
+  }
+
+  // if the existing node contains str data, then free the memory
+  if (n->value.vtype == PL_STR) free(n->value.as.sval);
+
+  // based on the type update the data
+  switch (vtype) {
+    case PL_INT: n->value.as.ival = *(int *)data; break;
+    case PL_DOUBLE: n->value.as.dval = *(double *)data; break;
+    case PL_STR: n->value.as.sval = new_str; break;
+  }
+
+  n->value.vtype = vtype;
+  return true;
+}
+
+
 static Value pop(DLinkedList *self) {
   if (!self || self->is_empty(self)) return (Value){0};
 
@@ -198,6 +260,73 @@ static Value pop(DLinkedList *self) {
 }
 
 
+static bool dll_remove(DLinkedList *self, const VType vtype, const void *data) {
+  if (!self || !data || self->is_empty(self)) return false;
+
+  // get the matching node
+  Node *curr = self->_state->head;
+  while (curr) {
+    if (is_value_match(curr->value, vtype, data)) break;
+    curr = curr->next;
+  }
+
+  if (!curr) return false;   // no match found (reached the end of the list)
+
+  // prev is Null, if match found is at the head node
+  if (curr->prev == NULL) {
+    self->_state->head = curr->next;
+
+    // if only one element is present and it's being removed
+    if (self->_state->head == NULL) self->_state->tail = NULL;
+  }
+  else {
+    curr->prev->next = curr->next;
+
+    // if curr is last node, then update the tail reference
+    if (self->_state->tail == curr)
+      self->_state->tail = curr->prev;
+    else
+      curr->next->prev = curr->prev;
+  }
+
+  pl_free_node(curr);
+  self->_state->size--;
+  return true;
+}
+
+
+static bool remove_at(DLinkedList *self, int index) {
+  if (!self || self->is_empty(self) || index < 0 || (size_t)index >= self->length(self))
+    return false;
+
+  // get the node to be removed
+  Node *curr = node_at(self, index);
+  if (!curr) return false;
+
+  // prev is Null, if match found is at the head node
+  if (curr->prev == NULL) {
+    self->_state->head = curr->next;
+
+    // if only one element is present and it's being removed
+    if (self->_state->head == NULL) self->_state->tail = NULL;
+    else self->_state->head->prev = NULL;
+  }
+  else {
+    curr->prev->next = curr->next;
+
+    // if curr is last node, then update the tail reference
+    if (self->_state->tail == curr)
+      self->_state->tail = curr->prev;
+    else
+      curr->next->prev = curr->prev;
+  }
+
+  pl_free_node(curr);
+  self->_state->size--;
+  return true;
+}
+
+
 static void reverse(DLinkedList *self) {
   if (!self || self->length(self) <= 1) return;
 
@@ -206,19 +335,19 @@ static void reverse(DLinkedList *self) {
   Node *old_tail = self->_state->tail;
 
   Node *curr = old_head;
-  Node *tmp = NULL;
+  Node *next_node = NULL;
 
   while (curr) {
-    tmp = curr->next;
-
-    curr->next = curr->prev;
-    curr->prev = tmp;
-
-    curr = tmp;
+    next_node = curr->next;           // copy of next node ref
+    PL_SWAP(curr->prev, curr->next);  // swap references b/w next and prev
+    curr = next_node;
   }
 
   self->_state->head = old_tail;
   self->_state->tail = old_head;
+
+  if (self->_state->head) self->_state->head->prev = NULL;
+  if (self->_state->tail) self->_state->tail->next = NULL;
 }
 
 
@@ -244,4 +373,28 @@ static inline bool is_value_match(const Value value, const VType vtype, const vo
   if (vtype == PL_STR) return strcmp(value.as.sval, (char *)data) == 0;
 
   return false;
+}
+
+
+static Node* node_at(const DLinkedList *self, int index) {
+  if (!self || self->is_empty(self) || index < 0 || (size_t)index >= self->length(self))
+    return NULL;
+
+  Node *curr = NULL;
+  size_t length = self->length(self);
+
+  // if index is in first half, then use head node to reach the node
+  // and if index is in second half, use tail node to reach the node
+
+  if ((size_t)index <= length / 2) {
+    curr = self->_state->head;
+    for (size_t i = 0; i < (size_t)index; i++) curr = curr->next;
+  }
+  else {
+    curr = self->_state->tail;
+    size_t steps = (length - 1) - (size_t)index;
+    for (size_t i = 0; i < steps; i++) curr = curr->prev;
+  }
+
+  return curr;
 }

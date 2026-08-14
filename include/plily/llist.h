@@ -59,6 +59,7 @@ typedef struct PL_LinkedList {
 /// Representation of Doubly Linked List
 typedef struct PL_DLinkedList {
   /// Get the value at the given index
+  /// Returned 'PL_Value' is snapshot of Node's value: Caller must not free or modify it
   PL_Value (* get)(const struct PL_DLinkedList *self, int index);
 
   /// Get the index of the first occurrence of the value
