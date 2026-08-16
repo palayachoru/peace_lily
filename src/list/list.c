@@ -310,7 +310,7 @@ static bool resize(List *self) {
   Value *new_arr = realloc(self->arr, new_capacity * sizeof(Value));
   if (!new_arr) return false;
 
-  //Clear the newly added memory block so it is not filled with heap garbage
+  // Clear the newly added memory block so it is not filled with heap garbage
   memset(&new_arr[old_capacity], 0, (new_capacity - old_capacity) * sizeof(Value));
 
   // upon success, update the members

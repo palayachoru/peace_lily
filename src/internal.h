@@ -3,6 +3,7 @@
 #include <plily/common.h>
 #include <plily/list.h>
 #include <plily/llist.h>
+#include <plily/stack.h>
 
 
 // Typedefs some structs for easy typing
@@ -13,3 +14,5 @@ typedef PL_Node  Node;
 typedef PL_List List;
 typedef PL_LinkedList LinkedList;
 typedef PL_DLinkedList DLinkedList;
+
+typedef PL_Stack Stack;
