@@ -16,3 +16,4 @@ typedef PL_LinkedList LinkedList;
 typedef PL_DLinkedList DLinkedList;
 
 typedef PL_Stack Stack;
+typedef PL_StackLL StackLL;
