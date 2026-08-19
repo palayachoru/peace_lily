@@ -5,3 +5,4 @@ add_subdirectory(common)    # Util functions across data structures
 add_subdirectory(list)      # Dynamic Array
 add_subdirectory(llist)     # Linked List
 add_subdirectory(stack)     # Stack
+add_subdirectory(queue)     # Queue

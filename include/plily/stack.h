@@ -2,7 +2,7 @@
 
 /**
  * @file stack.h
- * @brief Stack (Using Dynamic Array)
+ * @brief Stack (Using Dynamic Array & Linked List)
  *
  * top == 0 | stack empty
  * top always points at the vacant space
@@ -30,21 +30,21 @@ typedef struct _StackLLState _StackLLState;
 
 /// Representation of Stack struct (Implemented using Dynamic Array)
 typedef struct PL_Stack {
-  // Push a value to stack
+  /// Push a value to stack
   bool (* push)(struct PL_Stack *self, PL_VType vtype, const void *data);
 
-  // Pop a value from stack
-  // Caller is expected to free the returned PL_Value; use pl_free_value_data()
+  /// Pop a value from stack
+  /// Caller is expected to free the returned PL_Value; use pl_free_value_data()
   PL_Value (* pop)(struct PL_Stack *self);
 
-  // Peek at the value at top of stack
-  // Returned PL_Value is snapshop of value in Stack: Caller must not free/modify it
+  /// Peek at the value at top of stack
+  /// Returned PL_Value is snapshop of value in Stack: Caller must not free/modify it
   PL_Value (* peek)(struct PL_Stack *self);
 
-  // No of Value in the stack
+  /// No of Value in the stack
   int (* length)(struct PL_Stack *self);
 
-  // Is the stack empty?
+  /// Is the stack empty?
   bool (* is_empty)(struct PL_Stack *self);
 
   _StackState *_state;    ///< Internal struct to hold state of the Stack
@@ -53,21 +53,21 @@ typedef struct PL_Stack {
 
 /// Representation of Stack Struct (Implemented using LinkedList)
 typedef struct PL_StackLL {
-  // Push a value to stack
+  /// Push a value to stack
   bool (* push)(struct PL_StackLL *self, PL_VType vtype, const void *data);
 
-  // Pop a value from stack
-  // Caller is expected to free the returned PL_Value; use pl_free_value_data()
+  /// Pop a value from stack
+  /// Caller is expected to free the returned PL_Value; use pl_free_value_data()
   PL_Value (* pop)(struct PL_StackLL *self);
 
-  // Peek at the value at top of stack
-  // Returned PL_Value is snapshop of value in Stack: Caller must not free/modify it
+  /// Peek at the value at top of stack
+  /// Returned PL_Value is snapshop of value in Stack: Caller must not free/modify it
   PL_Value (* peek)(struct PL_StackLL *self);
 
-  // No of Value in the stack
+  /// No of Value in the stack
   int (* length)(struct PL_StackLL *self);
 
-  // Is the stack empty?
+  /// Is the stack empty?
   bool (* is_empty)(struct PL_StackLL *self);
 
   _StackLLState *_state;    ///< Internal struct to hold state of the StackLL

@@ -4,6 +4,7 @@
 #include <plily/list.h>
 #include <plily/llist.h>
 #include <plily/stack.h>
+#include <plily/queue.h>
 
 
 // Typedefs some structs for easy typing
@@ -17,3 +18,5 @@ typedef PL_DLinkedList DLinkedList;
 
 typedef PL_Stack Stack;
 typedef PL_StackLL StackLL;
+
+typedef PL_QueueLL QueueLL;
