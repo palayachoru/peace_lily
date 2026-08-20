@@ -1,8 +1,5 @@
-#include "plily/common.h"
 #define _POSIX_C_SOURCE 200809L   // Enables declarations for POSIX functions and symbols
 
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>

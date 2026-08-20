@@ -19,4 +19,5 @@ typedef PL_DLinkedList DLinkedList;
 typedef PL_Stack Stack;
 typedef PL_StackLL StackLL;
 
+typedef PL_Queue Queue;
 typedef PL_QueueLL QueueLL;
