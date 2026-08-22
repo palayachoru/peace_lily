@@ -7,7 +7,7 @@
 #include <plily/queue.h>
 
 
-// Typedefs some structs for easy typing
+// Typedefs structs for easy typing
 typedef PL_VType VType;
 typedef PL_Value Value;
 typedef PL_Node  Node;
@@ -21,3 +21,4 @@ typedef PL_StackLL StackLL;
 
 typedef PL_Queue Queue;
 typedef PL_QueueLL QueueLL;
+typedef PL_Deque Deque;

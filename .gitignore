@@ -3,5 +3,6 @@ dist/
 build/
 build_asan/
 
-# build related files
+# cmake build related files
 .cache
+__cmake*
